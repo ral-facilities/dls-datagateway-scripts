@@ -32,6 +32,7 @@ def login(base_url: str, authenticator: str, username: str, password: str) -> st
 
 
 def queue_all_files(
+    base_url: str,
     session_id: str,
     input_file: str,
     transport: str,
@@ -63,6 +64,7 @@ def queue_all_files(
             line = f.readline()
             if len(files) >= 10000:
                 download_id = queue_files(
+                    base_url=base_url,
                     session_id=session_id,
                     files=files,
                     transport=transport,
@@ -75,6 +77,7 @@ def queue_all_files(
     
     if files:
         download_id = queue_files(
+            base_url=base_url,
             session_id=session_id,
             files=files,
             transport=transport,
@@ -127,8 +130,13 @@ def queue_files(
         raise RuntimeError(response.text)
 
     content = json.loads(response.content)
-    print(content)
-    return content["downloadId"]
+    download_id = content["downloadId"]
+    not_found = content["notFound"]
+    print(
+        f"Submitted part Download with id {download_id}\n"
+        f"{len(not_found)} file(s) could not be found:{not_found}\n"
+    )
+    return download_id
 
 
 def monitor(
@@ -147,7 +155,7 @@ def monitor(
         monitor_sleep (int): Number of seconds to wait between each check.
 
     Raises:
-        RuntimeError: If a status code other than 200/201 is returned.
+        RuntimeError: If a status code other than 200 is returned.
     """
     url = base_url + "/topcat/user/downloads/status"
     params = {"sessionId": session_id, "downloadIds": downloads}
@@ -160,11 +168,10 @@ def monitor(
     while any([s in {"QUEUED", "PAUSED", "PREPARING", "RESTORING"} for s in content]):
         headers = {"Authorization": f"Bearer {session_id}"}
         requests.put(url=base_url + "/datagateway-api/sessions", headers=headers)
-        if response.status_code != 201:
+        if response.status_code != 200:
             raise RuntimeError(response.text)
 
         sleep(monitor_sleep)
-        params = {"sessionId": session_id, "downloadIds": downloads}
         response = requests.get(url=url, params=params)
         if response.status_code != 200:
             raise RuntimeError(response.text)
@@ -186,7 +193,7 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "input-file",
+        "input_file",
         type=str,
         help=(
             "File containing the full paths of all files to submit for download, "
@@ -263,32 +270,32 @@ if __name__ == "__main__":
             "monitoring."
         ),
     )
-    parser.parse_args()
+    args = parser.parse_args()
 
-    if parser.password_file is None:
+    if args.password_file is None:
         password = getpass()
     else:
-        with open(parser.password_file) as f:
+        with open(args.password_file) as f:
             password = f.readline().strip()
 
     session_id = login(
-        base_url=parser.url,
-        authenticator=parser.authenticator,
-        username=parser.username,
+        base_url=args.url,
+        authenticator=args.authenticator,
+        username=args.username,
         password=password,
     )
     download_ids = queue_all_files(
-        base_url=parser.url,
+        base_url=args.url,
         session_id=session_id,
-        input_file=parser.input_file,
-        transport=parser.access_method,
-        file_name=parser.download_name,
-        email=parser.email_address,
+        input_file=args.input_file,
+        transport=args.access_method,
+        file_name=args.download_name,
+        email=args.email_address,
     )
-    if parser.monitor_interval > 0:
+    if args.monitor_interval > 0:
         monitor(
-            base_url=parser.url,
+            base_url=args.url,
             session_id=session_id,
             downloads=download_ids,
-            monitor_sleep=parser.monitor_interval,
+            monitor_sleep=args.monitor_interval,
         )
