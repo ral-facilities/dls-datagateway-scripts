@@ -46,7 +46,7 @@ def queue_all_files(
         session_id (str): ICAT session id.
         input_file (str):
             File containing newline delimited filepaths for the requested data.
-        transport (str): Transport mechanism/destination to use.
+        transport (str): Transport mechanism/access method to use.
         file_name (str): Name used for the Download request (without '_part_N').
         email (str): Optional email to send notifications to.
 
@@ -143,7 +143,7 @@ def monitor(
     base_url: str,
     session_id: str,
     downloads: "list[int]",
-    monitor_sleep: int,
+    monitor_sleep: float,
 ) -> None:
     """
     Checks the status of all `downloads` and prints this to the console. Will repeat
@@ -152,7 +152,7 @@ def monitor(
     Args:
         session_id (str): ICAT session id.
         downloads (list[int]): List of download ids for each part.
-        monitor_sleep (int): Number of seconds to wait between each check.
+        monitor_sleep (float): Number of minutes to wait between each check.
 
     Raises:
         RuntimeError: If a status code other than 200 is returned.
@@ -171,7 +171,7 @@ def monitor(
         if response.status_code != 200:
             raise RuntimeError(response.text)
 
-        sleep(monitor_sleep)
+        sleep(monitor_sleep * 60)
         response = requests.get(url=url, params=params)
         if response.status_code != 200:
             raise RuntimeError(response.text)
@@ -184,12 +184,15 @@ def monitor(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="queue_downloads",
+        prog="queue_file_downloads",
         description=(
             "Submits DataGateway Download requests for a list of specific filepaths. "
             "The list will be split into separate parts of up to 10,000 files for "
-            "performance reasons. Once submitted Downloads will be visible in the "
-            "DataGateway UI as usual."
+            "performance reasons and held in a queue until system load is low enough "
+            "to process the request. Once submitted Downloads can be monitored by the "
+            "script by using the --monitor-interval argument. Downloads will also be "
+            "visible in the DataGateway UI as usual, and notifications sent to the "
+            "provided --email-address."
         ),
     )
     parser.add_argument(
@@ -234,8 +237,8 @@ if __name__ == "__main__":
         "--download-name",
         type=str,
         help=(
-            "Custom file name for the download(s). If not set will default to the "
-            "current date and time. '_part_N' will be appended to the each part "
+            "Custom file name/identifier for the download(s). If not set will default "
+            "to the current date and time. '_part_N' will be appended to the each part "
             "Download of up to 10,000 files."
         ),
     )
@@ -266,7 +269,7 @@ if __name__ == "__main__":
         default=0,
         help=(
             "Monitor the submitted downloads to see if they are complete with an "
-            "interval of this many seconds. Non-positive values will disable "
+            "interval of this many minutes. Non-positive values will disable "
             "monitoring."
         ),
     )
