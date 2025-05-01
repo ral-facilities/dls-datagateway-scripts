@@ -147,7 +147,7 @@ def monitor(
 ) -> None:
     """
     Checks the status of all `downloads` and prints this to the console. Will repeat
-    evert `monitor_sleep` seconds until all are complete.
+    every `monitor_sleep` minutes until all are complete.
 
     Args:
         session_id (str): ICAT session id.
