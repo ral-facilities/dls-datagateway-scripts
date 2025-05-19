@@ -92,7 +92,7 @@ def queue_all_files(
 def queue_files(
     base_url: str,
     session_id: str,
-    files: "list[int]",
+    files: "list[str]",
     transport: str,
     file_name: str,
     email: str,
@@ -104,7 +104,7 @@ def queue_files(
     Args:
         base_url (str): URL for DataGateway without path.
         session_id (str): ICAT session id.
-        files (list[int]): List of up to 10,000 of the requested filepaths.
+        files (list[str]): List of up to 10,000 of the requested filepaths.
         transport (str): Transport mechanism/destination to use.
         file_name (str): Name used for the Download request (with '_part_N').
         email (str): Optional email to send notifications to.
