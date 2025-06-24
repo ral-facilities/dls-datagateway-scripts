@@ -6,7 +6,7 @@ from getpass import getpass
 import json
 from time import sleep
 import requests
-
+from urllib.parse import quote
 
 def login(base_url: str, authenticator: str, username: str, password: str) -> str:
     """
@@ -23,7 +23,8 @@ def login(base_url: str, authenticator: str, username: str, password: str) -> st
         str: ICAT session id.
     """
     url = f"{base_url}/topcat/user/session"
-    data = {"plugin": authenticator, "username": username, "password": password}
+    encoded_password = quote(json.dumps(password)[1:-1])
+    data = {"plugin": authenticator, "username": username, "password": encoded_password}
     response = requests.post(url=url, data=data)
     if response.status_code != 200:
         raise RuntimeError(response.text)
