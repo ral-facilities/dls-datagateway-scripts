@@ -96,21 +96,25 @@ positional arguments:
                         taken to perform a search, and the more specific the search query is the more
                         efficient it will be. Some example searches are:
                             'visitId:AB1234'
-                                search for all Datafiles in all parts of proposal
+                                Search for all Datafiles in all parts of proposal
                             'visitId:"AB1234-1"'
-                                search for all Datafiles in a (part) visit
+                                Search for all Datafiles in a (part) visit
+                            'location.fileName:"config.txt"'
+                                Search for Datafiles with a specific file name and extension (both required)
+                            'location.fileName:config'
+                                Search for Datafiles with a specific name but any extension
                             'location.fileName:txt'
-                                search for Datafiles with the extension 'txt'
+                                Search for Datafiles with the extension 'txt', but no requirement on the name
                             'location:raw'
-                                search for Datafiles with the directory 'raw' somewhere in their path
+                                Search for Datafiles with the directory 'raw' somewhere in their path
                             'location:(raw processed)'
-                                search for Datafiles with either of two directories somewhere in their path
+                                Search for Datafiles with either of two directories somewhere in their path
                             'location.exact:/dls/i0/data/2000'
-                                search for Datafiles in any subdirectory of the provided path (case sensitive)
+                                Search for Datafiles in any subdirectory of the provided path (case sensitive)
                             'location.exact:/dls/i0/data/202?/*/raw/config.txt'
-                                search for a full path with wildcards (case sensitive)
+                                Search for a full path with wildcards (case sensitive)
                             '+location.exact:/dls/i0/data/202? +location:(raw processed) +location.fileName:txt'
-                                search for multiple criteria (all of which are required to match)
+                                Search for multiple criteria (all of which are required to match)
 
 optional arguments:
   -h, --help            show this help message and exit

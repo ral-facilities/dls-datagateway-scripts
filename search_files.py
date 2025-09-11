@@ -111,8 +111,12 @@ efficient it will be. Some example searches are:
         Search for all Datafiles in all parts of proposal
     'visitId:\"AB1234-1\"'
         Search for all Datafiles in a (part) visit
+    'location.fileName:\"config.txt\"'
+        Search for Datafiles with a specific file name and extension (both required)
+    'location.fileName:config'
+        Search for Datafiles with a specific name but any extension
     'location.fileName:txt'
-        Search for Datafiles with the extension 'txt'
+        Search for Datafiles with the extension 'txt', but no requirement on the name
     'location:raw'
         Search for Datafiles with the directory 'raw' somewhere in their path
     'location:(raw processed)'
