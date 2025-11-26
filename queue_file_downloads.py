@@ -2,34 +2,11 @@
  
 import argparse
 from datetime import datetime
-from getpass import getpass
 import json
 from time import sleep
 import requests
-from urllib.parse import quote
 
-def login(base_url: str, authenticator: str, username: str, password: str) -> str:
-    """
-    Args:
-        base_url (str): URL for DataGateway without path.
-        authenticator (str): Authentication mechanism to use.
-        username (str): Username to use.
-        password (str): Password to use.
-
-    Raises:
-        RuntimeError: If a status code other than 200 is returned.
-
-    Returns:
-        str: ICAT session id.
-    """
-    url = f"{base_url}/topcat/user/session"
-    encoded_password = quote(json.dumps(password)[1:-1])
-    data = {"plugin": authenticator, "username": username, "password": encoded_password}
-    response = requests.post(url=url, data=data)
-    if response.status_code != 200:
-        raise RuntimeError(response.text)
-
-    return json.loads(response.content)["sessionId"]
+from common import VERIFY, add_common_args, get_password, login
 
 
 def queue_all_files(
@@ -119,6 +96,7 @@ def queue_files(
     Returns:
         int: The Download id.
     """
+    url = f"{base_url}/topcat/user/queue/files"
     data = {
         "sessionId": session_id,
         "transport": transport,
@@ -126,7 +104,7 @@ def queue_files(
         "email": email,
         "files": files,
     }
-    response = requests.post(url=base_url + "/topcat/user/queue/files", data=data)
+    response = requests.post(url=url, data=data, verify=VERIFY)
     if response.status_code != 200:
         raise RuntimeError(response.text)
 
@@ -160,20 +138,21 @@ def monitor(
     """
     url = base_url + "/topcat/user/downloads/status"
     params = {"sessionId": session_id, "downloadIds": downloads}
-    response = requests.get(url=url, params=params)
+    response = requests.get(url=url, params=params, verify=VERIFY)
     if response.status_code != 200:
         raise RuntimeError(response.text)
     content = json.loads(response.content)
     print(content)
 
     while any([s in {"QUEUED", "PAUSED", "PREPARING", "RESTORING"} for s in content]):
+        sessions_url = f"{base_url}/datagateway-api/sessions"
         headers = {"Authorization": f"Bearer {session_id}"}
-        requests.put(url=base_url + "/datagateway-api/sessions", headers=headers)
+        requests.put(url=sessions_url, headers=headers, verify=VERIFY)
         if response.status_code != 200:
             raise RuntimeError(response.text)
 
         sleep(monitor_sleep * 60)
-        response = requests.get(url=url, params=params)
+        response = requests.get(url=url, params=params, verify=VERIFY)
         if response.status_code != 200:
             raise RuntimeError(response.text)
 
@@ -205,35 +184,7 @@ if __name__ == "__main__":
             "displayed in the DataGateway UI."
         ),
     )
-    parser.add_argument(
-        "--url",
-        type=str,
-        default="https://datagateway.diamond.ac.uk",
-        help="The url address of the DataGateway instance to submit requests to.",
-    )
-    parser.add_argument(
-        "-a",
-        "--authenticator",
-        type=str,
-        default="ldap",
-        help="The authentication mechanism to use for DataGateway login.",
-    )
-    parser.add_argument(
-        "-u",
-        "--username",
-        type=str,
-        required=True,
-        help="The username used for DataGateway login.",
-    )
-    parser.add_argument(
-        "-p",
-        "--password-file",
-        type=str,
-        help=(
-            "Location of file containing password for DataGateway login. If not "
-            "provided, the password will need to be provided by prompt."
-        ),
-    )
+    add_common_args(parser)
     parser.add_argument(
         "--download-name",
         type=str,
@@ -276,12 +227,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.password_file is None:
-        password = getpass()
-    else:
-        with open(args.password_file) as f:
-            password = f.readline().strip()
-
+    password = get_password()
     session_id = login(
         base_url=args.url,
         authenticator=args.authenticator,
