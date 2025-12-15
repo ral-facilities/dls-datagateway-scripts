@@ -227,7 +227,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    password = get_password()
+    password = get_password(args.password_file)
     session_id = login(
         base_url=args.url,
         authenticator=args.authenticator,
