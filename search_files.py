@@ -32,14 +32,16 @@ def search_all_files(
 
     data = {"query": query}
     batches = 1
-    total, search_after = search_files(url, params, data, output_file)
+    total_count, total_size, search_after = search_files(url, params, data, output_file)
     while search_after is not None:
         data["searchAfter"] = quote(json.dumps(search_after))
-        count, search_after = search_files(url, params, data, output_file)
+        count, size, search_after = search_files(url, params, data, output_file)
         batches += 1
-        total += count
+        total_count += count
+        total_size += size
 
-    print(f"{total} file(s) found in {batches} batches")
+    size_gb = round(total_size / 1e9)
+    print(f"{total_count} file(s) with volume {size_gb}GB found in {batches} batches")
 
 
 def search_files(
@@ -47,7 +49,7 @@ def search_files(
     params: dict,
     data: dict,
     output_file: str,
-) -> "Tuple[int, dict]":
+) -> "Tuple[int, int, dict]":
     """Perform a single search, possibly continuing to paginate after a previous search.
 
     Args:
@@ -60,7 +62,8 @@ def search_files(
         RuntimeError: `if response.status_code != 200` 
 
     Returns:
-        Tuple[int, dict]: Number of results, search_after object.
+        Tuple[int, int, dict]:
+            Number of results, volume of results, search_after object.
     """
     response = requests.post(url=url, data=data, params=params, verify=VERIFY)
     if response.status_code != 200:
@@ -68,16 +71,18 @@ def search_files(
 
     content = json.loads(response.content)
     results = content["results"]
+    count = len(results)
+    size = 0
     with open(output_file, "a") as f:
         for result in results:
+            size += result["_source"]["fileSize"]
             f.write(f"{result['_source']['location']}\n")
 
-    count = len(results)
     print(f"{count} file(s) found")
     if "search_after" in content:
-        return count, content["search_after"]
+        return count, size, content["search_after"]
     else:
-        return count, None
+        return count, size, None
 
 
 if __name__ == "__main__":
