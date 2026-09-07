@@ -149,7 +149,7 @@ efficient it will be. Some example searches are:
         choices=("true", "false"),
         help=(
             "Whether to limit results to data that the user is explicitly associated "
-            "with. Enabled by (default unless the user has administrator permissions). "
+            "with. Enabled by default (unless the user has administrator permissions). "
             "Enabling can make searches more efficient for users with small amounts of "
             "data, but for users with access to many visits/proposals, it may be more "
             "efficient to explicitly disable this setting."
