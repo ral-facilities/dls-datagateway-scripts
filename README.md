@@ -127,4 +127,6 @@ optional arguments:
                         Location of file containing password for DataGateway login. If not provided, the password will need to be provided by prompt.
   -m MAX_RESULTS, --max-results MAX_RESULTS
                         The maximum number of results to request in a single batch. If unset, the server default value will be used.
+  --my-data {True,False}
+                        Whether to limit results to data that the user is explicitly associated with. Enabled by default (unless the user has administrator permissions). Enabling can make searches more efficient for users with small amounts of data, but for users with access to many visits/proposals, it may be more efficient to explicitly disable this setting.
 ```

@@ -15,6 +15,7 @@ def search_all_files(
     output_file: str,
     query: str,
     max_results: int,
+    my_data: "bool | None",
 ) -> None:
     """Performs several individual searches to get all results matching `query`.
 
@@ -24,6 +25,7 @@ def search_all_files(
         output_file (str): File to write founds filepaths to.
         query (str): String in Lucene query syntax.
         max_results (int): The number of results to request in each batch.
+        my_data (bool): Whether to limit to the user's own data only.
     """
     url = f"{base_url}/topcat/user/search/files"
     params = {"sessionId": session_id}
@@ -31,6 +33,9 @@ def search_all_files(
         params["maxResults"] = max_results
 
     data = {"query": query}
+    if my_data is not None:
+        data["myData"] = my_data
+
     batches = 1
     total, search_after = search_files(url, params, data, output_file)
     while search_after is not None:
@@ -138,6 +143,18 @@ efficient it will be. Some example searches are:
             "server default value will be used."
         ),
     )
+    parser.add_argument(
+        "--my-data",
+        type=str,
+        choices=("true", "false"),
+        help=(
+            "Whether to limit results to data that the user is explicitly associated "
+            "with. Enabled by default (unless the user has administrator permissions). "
+            "Enabling can make searches more efficient for users with small amounts of "
+            "data, but for users with access to many visits/proposals, it may be more "
+            "efficient to explicitly disable this setting."
+        ),
+    )
     args = parser.parse_args()
 
     password = get_password(args.password_file)
@@ -153,4 +170,5 @@ efficient it will be. Some example searches are:
         output_file=args.output_file,
         query=args.query,
         max_results=args.max_results,
+        my_data=args.my_data,
     )
