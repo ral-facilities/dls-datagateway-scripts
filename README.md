@@ -130,3 +130,67 @@ optional arguments:
   --my-data {True,False}
                         Whether to limit results to data that the user is explicitly associated with. Enabled by default (unless the user has administrator permissions). Enabling can make searches more efficient for users with small amounts of data, but for users with access to many visits/proposals, it may be more efficient to explicitly disable this setting.
 ```
+
+## get_size
+
+Queries for the total volume of the requested entity(ies).
+```bash
+python3 get_size.py --username=abc12345 files input-file.txt
+python3 get_size.py --username=abc12345 visit 'ab1234-1'
+```
+
+Full help text and description of arguments is available with the `--help` command:
+```bash
+python3 get_size.py --help
+```
+```
+usage: get_size [-h] [--url URL] [-a AUTHENTICATOR] -u USERNAME
+                [-p PASSWORD_FILE]
+                {visit,files} ...
+
+Queries DataGateway Download API for the volume of all Datafiles within a
+visit or a list of specific filepaths.
+
+positional arguments:
+  {visit,files}         Target for query.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --url URL             The url address of the DataGateway instance to submit
+                        requests to.
+  -a AUTHENTICATOR, --authenticator AUTHENTICATOR
+                        The authentication mechanism to use for DataGateway
+                        login.
+  -u USERNAME, --username USERNAME
+                        The username used for DataGateway login.
+  -p PASSWORD_FILE, --password-file PASSWORD_FILE
+                        Location of file containing password for DataGateway
+                        login. If not provided, the password will need to be
+                        provided by prompt.
+```
+```bash
+python3 get_size.py files --help
+```
+```
+usage: get_size files [-h] input_file
+
+positional arguments:
+  input_file  File containing the full paths of all files to query for size,
+              separated by newlines. The path should match the 'location'
+              field displayed in the DataGateway UI.
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+```bash
+python3 get_size.py visit --help
+```
+```
+usage: get_size visit [-h] visit_id
+
+positional arguments:
+  visit_id    Visit id in the form AB1234-1.
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
