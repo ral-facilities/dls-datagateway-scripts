@@ -80,8 +80,18 @@ def search_files(
     size = 0
     with open(output_file, "a") as f:
         for result in results:
-            size += result["_source"]["fileSize"]
-            f.write(f"{result['_source']['location']}\n")
+            if "_source" in result:
+                key = "_source"
+            elif "source" in result:
+                key = "source"
+            else:
+                raise KeyError(
+                    f"Neither 'source' nor '_source' found in {result.keys()}",
+                )
+
+            source = result[key]
+            size += source.get("fileSize", 0)
+            f.write(f"{source.get('location', '')}\n")
 
     print(f"{count} file(s) found")
     if "search_after" in content:
